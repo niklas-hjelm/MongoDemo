@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
@@ -35,6 +37,28 @@ namespace MongoDemo.ViewModels
             }
         }
 
+        private AuthorModel _selectedAuthorToAdd;
+
+        public AuthorModel SelectedAuthorToAdd
+        {
+            get { return _selectedAuthorToAdd; }
+            set
+            {
+                SetProperty(ref _selectedAuthorToAdd, value);
+            }
+        }
+
+        private AuthorModel _selectedAuthorToRemove;
+
+        public AuthorModel SelectedAuthorToRemove
+        {
+            get { return _selectedAuthorToRemove; }
+            set
+            {
+                SetProperty(ref _selectedAuthorToRemove, value);
+            }
+        }
+
         private string _title;
 
         public string Title
@@ -59,26 +83,96 @@ namespace MongoDemo.ViewModels
             set { SetProperty(ref _authors, value); }
         }
 
+        private ObservableCollection<AuthorModel> _allAuthors = new();
+
+        public ObservableCollection<AuthorModel> AllAuthors
+        {
+            get { return _allAuthors; }
+            set { SetProperty(ref _allAuthors, value); }
+        }
+
         #endregion
 
         public IRelayCommand SubmitBookCommand { get; }
+        public IRelayCommand AddBookCommand { get; }
+        public IRelayCommand AddAuthorCommand { get; }
+        public IRelayCommand RemoveAuthorCommand { get; }
 
         public BookViewModel(DatabaseManager databaseManager)
         {
             _databaseManager = databaseManager;
 
             SubmitBookCommand = new RelayCommand(SubmitBook);
+            AddBookCommand = new RelayCommand(AddBook);
+            AddAuthorCommand = new RelayCommand(AddAuthor);
+            RemoveAuthorCommand = new RelayCommand(RemoveAuthor);
 
+            UpdateBooks();
+            UpdateAllAuthors();
+        }
+
+        private void RemoveAuthor()
+        {
+            if (_selectedAuthorToRemove == null)
+            {
+                return;
+            }
+
+            Authors.Remove(SelectedAuthorToRemove);
+        }
+
+        private void AddAuthor()
+        {
+            if (_selectedAuthorToAdd == null)
+            {
+                return;
+            }
+
+            if (Authors.Any(a => a.ObjectId == _selectedAuthorToAdd.ObjectId))
+            {
+                return;
+            }
+
+            Authors.Add(SelectedAuthorToAdd);
+        }
+
+        private void UpdateBooks()
+        {
             foreach (var bookModel in _databaseManager.GetAllDocumentsInCollection<BookModel>("books"))
             {
-                Books.Add(bookModel);
+                if (Books.All(b => b.Isbn != bookModel.Isbn))
+                {
+                    Books.Add(bookModel);
+                }
             }
+        }
+        private void UpdateAllAuthors()
+        {
+            foreach (var authorModel in _databaseManager.GetAllDocumentsInCollection<AuthorModel>("authors"))
+            {
+                AllAuthors.Add(authorModel);
+            }
+        }
+
+        private void AddBook()
+        {
+            var newBook = new BookModel()
+            {
+                Title = Title,
+                Isbn = Isbn,
+                Authors = Authors.Select(a=> new ObjectId(a.ObjectId)).ToList()
+            };
+
+            _databaseManager.InsertDocument(newBook, "books");
+            UpdateBooks();
+            SelectedBook = newBook;
         }
 
         public void SubmitBook()
         {
             SelectedBook.Title = Title;
             SelectedBook.Isbn = Isbn;
+            SelectedBook.Authors = Authors.Select(a => new ObjectId(a.ObjectId)).ToList();
             _databaseManager.UpdateBook(SelectedBook);
         }
 

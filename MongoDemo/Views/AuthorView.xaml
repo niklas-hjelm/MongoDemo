@@ -13,6 +13,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="15" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="15" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -26,13 +27,42 @@
                 Grid.Row="1"
                 Grid.Column="1"
                 DisplayMemberPath="FirstName"
-                SelectedItem="{Binding SelectedAuthor}"
-                ItemsSource="{Binding Authors}" />
+                ItemsSource="{Binding Authors}"
+                SelectedItem="{Binding SelectedAuthor}" />
             <ListBox
                 Grid.Row="1"
                 Grid.Column="3"
                 DisplayMemberPath="Title"
                 ItemsSource="{Binding Books}" />
+            <Grid
+                Grid.Row="2"
+                Grid.Column="1"
+                Grid.ColumnSpan="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="10">
+                    <Label>First Name</Label>
+                    <TextBox Height="30" Text="{Binding FirstName}" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Margin="10">
+                    <Label>Last Name</Label>
+                    <TextBox Height="30" Text="{Binding LastName}" />
+                </StackPanel>
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Width="110"
+                    Height="35"
+                    Command="{Binding AddAuthorCommand}">
+                    Add Author
+                </Button>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>
